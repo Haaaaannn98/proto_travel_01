@@ -1,10 +1,23 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
+import { Noto_Sans_KR, Jua } from 'next/font/google'
 import './globals.css'
 
+const notoKr = Noto_Sans_KR({
+  subsets: ['latin'],
+  weight: ['400', '500', '700', '900'],
+  variable: '--font-noto-kr',
+})
+
+const jua = Jua({
+  subsets: ['latin'],
+  weight: ['400'],
+  variable: '--font-jua',
+})
+
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
+  title: '한그릇 · 하루를 한 그릇처럼 알차게',
+  description: '관광 스팟, 소요시간, 이동시간, 가계부까지 한 번에 관리하는 여행 계획 앱',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -39,8 +52,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body className="antialiased">
+    <html lang="ko" className={`bg-background ${notoKr.variable} ${jua.variable}`}>
+      <body className="antialiased font-sans">
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
