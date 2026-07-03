@@ -1,5 +1,5 @@
-import { HanGeureutApp } from "@/components/hangeureut-app"
+import { TravelApp } from "@/components/travel-app"
 
 export default function Page() {
-  return <HanGeureutApp />
+  return <TravelApp />
 }

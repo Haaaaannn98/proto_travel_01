@@ -20,9 +20,12 @@ const TABS: { id: Tab; label: string; icon: typeof Home }[] = [
   { id: "expense", label: "가계부", icon: Wallet },
 ]
 
-export function HanGeureutApp() {
+const APP_NAME = "여행 플래너"
+const APP_TAGLINE = "하루를 알차게 채우는 여행 계획"
+
+export function TravelApp() {
   const [trips, setTrips] = useState<Trip[]>(mockTrips)
-  const [activeTripId, setActiveTripId] = useState(mockTrips[0].id)
+  const [activeTripId, setActiveTripId] = useState(mockTrips[0]?.id ?? "")
   const [tab, setTab] = useState<Tab>("expense")
 
   const trip = useMemo(
@@ -31,6 +34,7 @@ export function HanGeureutApp() {
   )
 
   function handleAddExpense(expense: Omit<Expense, "id">) {
+    if (!trip) return
     setTrips((prev) =>
       prev.map((t) =>
         t.id === trip.id
@@ -40,8 +44,34 @@ export function HanGeureutApp() {
     )
   }
 
+  function handleDeleteExpense(expenseId: string) {
+    if (!trip) return
+    setTrips((prev) =>
+      prev.map((t) =>
+        t.id === trip.id
+          ? { ...t, expenses: t.expenses.filter((e) => e.id !== expenseId) }
+          : t,
+      ),
+    )
+  }
+
+  function handleAddTrip(newTrip: Trip) {
+    setTrips((prev) => [newTrip, ...prev])
+    setActiveTripId(newTrip.id)
+  }
+
+  function handleDeleteTrip(tripId: string) {
+    setTrips((prev) => {
+      const next = prev.filter((t) => t.id !== tripId)
+      if (tripId === activeTripId && next.length > 0) {
+        setActiveTripId(next[0].id)
+      }
+      return next
+    })
+  }
+
   const titleMap: Record<Tab, string> = {
-    home: "한그릇",
+    home: APP_NAME,
     timeline: "일자별 일정",
     map: "지도",
     expense: "가계부",
@@ -51,10 +81,10 @@ export function HanGeureutApp() {
     <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-background">
       {/* 헤더 */}
       <header className="sticky top-0 z-20 border-b border-border bg-background/85 px-4 py-3 backdrop-blur">
-        {tab === "home" ? (
+        {tab === "home" || !trip ? (
           <div>
-            <h1 className="font-display text-2xl leading-none text-primary">한그릇</h1>
-            <p className="mt-1 text-xs text-muted-foreground">하루를 한 그릇처럼 알차게</p>
+            <h1 className="font-display text-2xl leading-none text-primary">{APP_NAME}</h1>
+            <p className="mt-1 text-xs text-muted-foreground">{APP_TAGLINE}</p>
           </div>
         ) : (
           <div className="flex items-center justify-between">
@@ -79,11 +109,24 @@ export function HanGeureutApp() {
               setActiveTripId(id)
               setTab("timeline")
             }}
+            onAddTrip={handleAddTrip}
+            onDeleteTrip={handleDeleteTrip}
           />
         )}
-        {tab === "timeline" && <TimelineView trip={trip} />}
-        {tab === "map" && <MapView trip={trip} />}
-        {tab === "expense" && <ExpenseTracker trip={trip} onAddExpense={handleAddExpense} />}
+        {tab !== "home" && !trip && (
+          <div className="py-24 text-center text-sm text-muted-foreground">
+            여행이 없습니다. &lsquo;여행&rsquo; 탭에서 새 여행을 만들어 보세요.
+          </div>
+        )}
+        {tab === "timeline" && trip && <TimelineView trip={trip} />}
+        {tab === "map" && trip && <MapView trip={trip} />}
+        {tab === "expense" && trip && (
+          <ExpenseTracker
+            trip={trip}
+            onAddExpense={handleAddExpense}
+            onDeleteExpense={handleDeleteExpense}
+          />
+        )}
       </main>
 
       {/* 하단 네비게이션 */}

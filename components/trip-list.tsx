@@ -1,56 +1,86 @@
 "use client"
 
-import { CalendarDays, ChevronRight, MapPin, Plus, Wallet } from "lucide-react"
+import { CalendarDays, ChevronRight, MapPin, Trash2, Wallet } from "lucide-react"
 import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import type { Trip } from "@/lib/types"
 import { formatDateRange, formatKRW } from "@/lib/format"
+import { AddTripDialog } from "./add-trip-dialog"
 
 interface Props {
   trips: Trip[]
   activeTripId: string
   onSelect: (id: string) => void
+  onAddTrip: (trip: Trip) => void
+  onDeleteTrip: (id: string) => void
 }
 
-export function TripList({ trips, activeTripId, onSelect }: Props) {
+export function TripList({ trips, activeTripId, onSelect, onAddTrip, onDeleteTrip }: Props) {
   return (
     <div className="space-y-4 pb-24">
       <div className="flex items-center justify-between px-1">
         <h2 className="font-display text-lg">내 여행</h2>
-        <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground">
-          <Plus className="size-4" />새 여행
-        </Button>
+        <AddTripDialog onAdd={onAddTrip} />
       </div>
+
+      {trips.length === 0 && (
+        <Card className="p-10 text-center">
+          <p className="text-sm text-muted-foreground">
+            아직 여행이 없어요. &lsquo;새 여행&rsquo;으로 시작해 보세요.
+          </p>
+        </Card>
+      )}
 
       {trips.map((trip) => {
         const total = trip.expenses.reduce((s, e) => s + e.amountKRW, 0)
         const spotCount = trip.days.reduce((s, d) => s + d.spots.length, 0)
         const active = trip.id === activeTripId
         return (
-          <button key={trip.id} onClick={() => onSelect(trip.id)} className="block w-full text-left">
-            <Card
-              className="overflow-hidden p-0 transition-shadow hover:shadow-md"
-              style={active ? { outline: "2px solid var(--primary)" } : undefined}
+          <Card
+            key={trip.id}
+            className="overflow-hidden p-0 transition-shadow hover:shadow-md"
+            style={active ? { outline: "2px solid var(--primary)" } : undefined}
+          >
+            <div
+              className="flex items-center justify-between px-5 py-4"
+              style={{ backgroundColor: trip.coverColor }}
             >
-              <div
-                className="flex items-center justify-between px-5 py-4"
-                style={{ backgroundColor: trip.coverColor }}
+              <button
+                onClick={() => onSelect(trip.id)}
+                className="min-w-0 flex-1 text-left text-primary-foreground"
               >
-                <div className="text-primary-foreground">
-                  <p className="text-xs opacity-90">
-                    {trip.country} · {trip.destination}
-                  </p>
-                  <h3 className="font-display text-xl leading-tight">{trip.title}</h3>
-                </div>
-                <ChevronRight className="size-5 text-primary-foreground/90" />
+                <p className="text-xs opacity-90">
+                  {trip.country ? `${trip.country} · ` : ""}
+                  {trip.destination}
+                </p>
+                <h3 className="truncate font-display text-xl leading-tight">{trip.title}</h3>
+              </button>
+              <div className="flex shrink-0 items-center gap-1">
+                <button
+                  onClick={() => {
+                    if (confirm(`'${trip.title}' 여행을 삭제할까요?`)) onDeleteTrip(trip.id)
+                  }}
+                  aria-label="여행 삭제"
+                  className="rounded-full p-1.5 text-primary-foreground/90 transition-colors hover:bg-black/10"
+                >
+                  <Trash2 className="size-4" />
+                </button>
+                <button onClick={() => onSelect(trip.id)} aria-label="여행 열기">
+                  <ChevronRight className="size-5 text-primary-foreground/90" />
+                </button>
               </div>
-              <div className="grid grid-cols-3 divide-x divide-border">
-                <Info icon={<CalendarDays className="size-4" />} label={formatDateRange(trip.startDate, trip.endDate).split(" · ")[1]} />
-                <Info icon={<MapPin className="size-4" />} label={`${spotCount}곳`} />
-                <Info icon={<Wallet className="size-4" />} label={formatKRW(total)} />
-              </div>
-            </Card>
-          </button>
+            </div>
+            <button
+              onClick={() => onSelect(trip.id)}
+              className="grid w-full grid-cols-3 divide-x divide-border"
+            >
+              <Info
+                icon={<CalendarDays className="size-4" />}
+                label={formatDateRange(trip.startDate, trip.endDate).split(" · ")[1]}
+              />
+              <Info icon={<MapPin className="size-4" />} label={`${spotCount}곳`} />
+              <Info icon={<Wallet className="size-4" />} label={formatKRW(total)} />
+            </button>
+          </Card>
         )
       })}
     </div>
