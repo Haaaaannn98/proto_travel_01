@@ -14,15 +14,15 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import type { Trip } from "@/lib/types"
+import { createTrip } from "@/lib/supabase/queries"
 
 interface Props {
-  onAdd: (trip: Trip) => void
+  onCreated: (tripId: string) => void
 }
 
 const COVER_COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"]
 
-export function AddTripDialog({ onAdd }: Props) {
+export function AddTripDialog({ onCreated }: Props) {
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState("")
   const [country, setCountry] = useState("")
@@ -30,6 +30,7 @@ export function AddTripDialog({ onAdd }: Props) {
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
   const [budget, setBudget] = useState("")
+  const [submitting, setSubmitting] = useState(false)
 
   const valid = title.trim() && startDate && endDate && startDate <= endDate
 
@@ -42,37 +43,28 @@ export function AddTripDialog({ onAdd }: Props) {
     setBudget("")
   }
 
-  function buildDays(): Trip["days"] {
-    const days: Trip["days"] = []
-    const start = new Date(startDate + "T00:00:00")
-    const end = new Date(endDate + "T00:00:00")
-    let i = 0
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      i += 1
-      const iso = d.toISOString().slice(0, 10)
-      days.push({ id: `day-${Date.now()}-${i}`, date: iso, label: `${i}일차`, spots: [] })
-    }
-    return days
-  }
-
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!valid) return
-    const id = `trip-${Date.now()}`
-    onAdd({
-      id,
-      title: title.trim(),
-      destination: destination.trim() || "미정",
-      country: country.trim() || "",
-      startDate,
-      endDate,
-      coverColor: COVER_COLORS[Math.floor(Math.random() * COVER_COLORS.length)],
-      budgetKRW: Number.parseInt(budget) * 10000 || 0,
-      days: buildDays(),
-      expenses: [],
-    })
-    reset()
-    setOpen(false)
+    if (!valid || submitting) return
+    setSubmitting(true)
+    try {
+      const tripId = await createTrip({
+        title: title.trim(),
+        destination: destination.trim() || "미정",
+        country: country.trim() || "",
+        startDate,
+        endDate,
+        coverColor: COVER_COLORS[Math.floor(Math.random() * COVER_COLORS.length)],
+        budgetKRW: Number.parseInt(budget) * 10000 || 0,
+      })
+      reset()
+      setOpen(false)
+      onCreated(tripId)
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "여행 생성에 실패했습니다.")
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -146,8 +138,8 @@ export function AddTripDialog({ onAdd }: Props) {
 
           <DialogFooter className="gap-2 sm:gap-2">
             <DialogClose render={<Button type="button" variant="ghost" />}>취소</DialogClose>
-            <Button type="submit" disabled={!valid}>
-              만들기
+            <Button type="submit" disabled={!valid || submitting}>
+              {submitting ? "만드는 중…" : "만들기"}
             </Button>
           </DialogFooter>
         </form>

@@ -8,18 +8,17 @@ import { AddTripDialog } from "./add-trip-dialog"
 
 interface Props {
   trips: Trip[]
-  activeTripId: string
   onSelect: (id: string) => void
-  onAddTrip: (trip: Trip) => void
+  onCreated: (id: string) => void
   onDeleteTrip: (id: string) => void
 }
 
-export function TripList({ trips, activeTripId, onSelect, onAddTrip, onDeleteTrip }: Props) {
+export function TripList({ trips, onSelect, onCreated, onDeleteTrip }: Props) {
   return (
     <div className="space-y-4 pb-24">
       <div className="flex items-center justify-between px-1">
         <h2 className="font-display text-lg">내 여행</h2>
-        <AddTripDialog onAdd={onAddTrip} />
+        <AddTripDialog onCreated={onCreated} />
       </div>
 
       {trips.length === 0 && (
@@ -33,12 +32,10 @@ export function TripList({ trips, activeTripId, onSelect, onAddTrip, onDeleteTri
       {trips.map((trip) => {
         const total = trip.expenses.reduce((s, e) => s + e.amountKRW, 0)
         const spotCount = trip.days.reduce((s, d) => s + d.spots.length, 0)
-        const active = trip.id === activeTripId
         return (
           <Card
             key={trip.id}
             className="overflow-hidden p-0 transition-shadow hover:shadow-md"
-            style={active ? { outline: "2px solid var(--primary)" } : undefined}
           >
             <div
               className="flex items-center justify-between px-5 py-4"
@@ -56,7 +53,8 @@ export function TripList({ trips, activeTripId, onSelect, onAddTrip, onDeleteTri
               </button>
               <div className="flex shrink-0 items-center gap-1">
                 <button
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation()
                     if (confirm(`'${trip.title}' 여행을 삭제할까요?`)) onDeleteTrip(trip.id)
                   }}
                   aria-label="여행 삭제"

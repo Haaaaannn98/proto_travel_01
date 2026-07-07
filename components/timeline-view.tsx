@@ -8,8 +8,17 @@ import { cn } from "@/lib/utils"
 import type { Trip } from "@/lib/types"
 import { formatDateShort, formatMinutes } from "@/lib/format"
 import { spotIcon } from "./category-icon"
+import { AddSpotDialog } from "./add-spot-dialog"
+import type { SpotInput } from "@/lib/supabase/queries"
 
-export function TimelineView({ trip }: { trip: Trip }) {
+interface Props {
+  trip: Trip
+  onAddSpot: (dayId: string, input: SpotInput) => void | Promise<void>
+  onUpdateSpot: (spotId: string, dayId: string, input: SpotInput) => void | Promise<void>
+  onDeleteSpot: (spotId: string, dayId: string) => void | Promise<void>
+}
+
+export function TimelineView({ trip, onAddSpot, onUpdateSpot, onDeleteSpot }: Props) {
   const [activeDay, setActiveDay] = useState(trip.days[0]?.id)
   const day = trip.days.find((d) => d.id === activeDay) ?? trip.days[0]
 
@@ -19,7 +28,6 @@ export function TimelineView({ trip }: { trip: Trip }) {
 
   return (
     <div className="space-y-5 pb-24">
-      {/* 일자 선택 */}
       <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
         {trip.days.map((d, i) => (
           <button
@@ -37,7 +45,6 @@ export function TimelineView({ trip }: { trip: Trip }) {
         ))}
       </div>
 
-      {/* 하루 총 시간 요약 */}
       <Card className="grid grid-cols-3 divide-x divide-border p-0 text-center">
         <div className="px-2 py-4">
           <p className="text-xs text-muted-foreground">머문 시간</p>
@@ -53,23 +60,19 @@ export function TimelineView({ trip }: { trip: Trip }) {
         </div>
       </Card>
 
-      <p className="px-1 text-sm font-semibold text-muted-foreground">{day.label}</p>
+      <div className="flex items-center justify-between px-1">
+        <p className="text-sm font-semibold text-muted-foreground">{day.label}</p>
+      </div>
 
-      {/* 타임라인 */}
       <ol className="relative space-y-0">
         {day.spots.map((spot, i) => {
           const Icon = spotIcon[spot.category] ?? MapPin
           const isLast = i === day.spots.length - 1
           return (
             <li key={spot.id} className="relative pl-14">
-              {/* 세로 선 */}
               {!isLast && (
-                <span
-                  className="absolute left-[22px] top-11 bottom-0 w-0.5 bg-border"
-                  aria-hidden
-                />
+                <span className="absolute left-[22px] top-11 bottom-0 w-0.5 bg-border" aria-hidden />
               )}
-              {/* 시각 + 아이콘 */}
               <span className="absolute left-0 top-1 flex size-11 items-center justify-center rounded-full border-2 border-primary bg-card text-primary">
                 <Icon className="size-5" />
               </span>
@@ -84,12 +87,19 @@ export function TimelineView({ trip }: { trip: Trip }) {
                 <Card className="p-4">
                   <div className="flex items-start justify-between gap-2">
                     <h3 className="font-medium leading-snug">{spot.name}</h3>
-                    {spot.rating && (
-                      <span className="flex shrink-0 items-center gap-0.5 text-xs text-muted-foreground">
-                        <Star className="size-3.5 fill-chart-3 text-chart-3" />
-                        {spot.rating}
-                      </span>
-                    )}
+                    <div className="flex shrink-0 items-center gap-2">
+                      {spot.rating && (
+                        <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
+                          <Star className="size-3.5 fill-chart-3 text-chart-3" />
+                          {spot.rating}
+                        </span>
+                      )}
+                      <AddSpotDialog
+                        spot={spot}
+                        onSave={(input) => onUpdateSpot(spot.id, day.id, input)}
+                        onDelete={() => onDeleteSpot(spot.id, day.id)}
+                      />
+                    </div>
                   </div>
                   {spot.hours && (
                     <p className="mt-1.5 text-xs text-muted-foreground">영업 · {spot.hours}</p>
@@ -115,6 +125,10 @@ export function TimelineView({ trip }: { trip: Trip }) {
           )
         })}
       </ol>
+
+      <div className="pt-2">
+        <AddSpotDialog onSave={(input) => onAddSpot(day.id, input)} />
+      </div>
     </div>
   )
 }

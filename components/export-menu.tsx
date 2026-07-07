@@ -5,7 +5,8 @@ import { Check, FileJson, FileSpreadsheet, ImageDown, Link2, Share2 } from "luci
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
-  DropdownMenuContent,
+  DropdownMenuContent, 
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -79,30 +80,35 @@ export function ExportMenu({ trip, captureRef }: Props) {
         내보내기
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-52">
-        <DropdownMenuLabel>파일로 저장</DropdownMenuLabel>
-        <DropdownMenuItem onClick={() => exportTripJSON(trip)}>
-          <FileJson className="size-4" />
-          여행 전체 (JSON)
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => exportExpensesCSV(trip)}>
-          <FileSpreadsheet className="size-4" />
-          가계부 (CSV)
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleImage}>
-          <ImageDown className="size-4" />
-          가계부 이미지 (PNG)
-        </DropdownMenuItem>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>파일로 저장</DropdownMenuLabel>
+          <DropdownMenuItem onClick={() => exportTripJSON(trip)}>
+            <FileJson className="size-4" />
+            여행 전체 (JSON)
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => exportExpensesCSV(trip)}>
+            <FileSpreadsheet className="size-4" />
+            가계부 (CSV)
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleImage}>
+            <ImageDown className="size-4" />
+            가계부 이미지 (PNG)
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuLabel>공유</DropdownMenuLabel>
-        <DropdownMenuItem onClick={handleShare}>
-          <Share2 className="size-4" />
-          공유하기
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleCopyLink}>
-          {copied ? <Check className="size-4" /> : <Link2 className="size-4" />}
-          {copied ? "복사됨!" : "링크 복사"}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>공유</DropdownMenuLabel>
+          <DropdownMenuItem onClick={handleShare}>
+            <Share2 className="size-4" />
+            공유하기
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleCopyLink}>
+            {copied ? <Check className="size-4" /> : <Link2 className="size-4" />}
+            {copied ? "복사됨!" : "링크 복사"}
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+        </DropdownMenuContent>
     </DropdownMenu>
   )
 }
+   

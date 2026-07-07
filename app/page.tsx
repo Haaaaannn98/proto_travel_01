@@ -1,5 +1,5 @@
-import { TravelApp } from "@/components/travel-app"
+import { HomePage } from "@/components/home-page"
 
 export default function Page() {
-  return <TravelApp />
+  return <HomePage />
 }
